@@ -1,0 +1,20 @@
+groups:
+  - name: ollama
+    interval: 1m
+    rules:
+      - alert: OllamaDown
+        expr: probe_success{job="ollama"} == 0
+        for: 5m
+        labels:
+          severity: warning # laptop sleeps — warning, not critical
+        annotations:
+          summary: "ollama api not responding"
+
+      - alert: OllamaNearOom
+        expr: (container_memory_working_set_bytes{name="ollama"} / container_spec_memory_limit_bytes{name="ollama"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ollama over 85% of memory limit — expect slow tokens or oomkill"
+          runbook: "selfhost/SLO.md#the-oom-story"

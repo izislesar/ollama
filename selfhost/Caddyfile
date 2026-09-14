@@ -1,0 +1,1 @@
+# ollama has no auth — never expose without a token-adding proxy. laptop loopback only.
