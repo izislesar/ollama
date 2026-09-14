@@ -1,0 +1,36 @@
+# ollama selfhost. local llm api, cpu by default on the laptop.
+# hungry: models eat ram fast. small ones only unless you know what you have free.
+# manual runs, no autostart. usage: docker compose -f selfhost/docker-compose.yml up -d
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: "no"
+    ports:
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
+      # loopback: no auth on the api, don't share the port
+    volumes:
+      - ollama-models:/root/.ollama
+    environment:
+      # keep it conservative on shared laptop ram. raise if dedicated.
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_KEEP_ALIVE=10m
+    # cpu-only. for nvidia gpus add the deploy.reservations block from
+    # https://github.com/ollama/ollama/blob/main/docs/gpu.md — not enabled
+    # here on purpose, detect your card first.
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 6G # bump if the laptop has headroom; oom story in SLO.md
+
+volumes:
+  ollama-models:
+    name: ollama-models
